@@ -4,6 +4,9 @@ package com.dss.ia.services;
 import com.dss.ia.model.Answer;
 import com.dss.ia.model.GetCapitalRequest;
 import com.dss.ia.model.Question;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.ChatClient;
@@ -19,9 +22,10 @@ import java.util.Map;
 @Service
 public class OpenAIServiceImpl implements OpenAIService {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(OpenAIServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(OpenAIServiceImpl.class);
 
     private final ChatClient chatClient;
+    private final ObjectMapper objectMapper;
 
     @Value("classpath:templates/get-capital-prompt.st")
     private Resource getCapitalPrompt;
@@ -29,8 +33,9 @@ public class OpenAIServiceImpl implements OpenAIService {
     @Value("classpath:templates/get-capital-with-info.st")
     private Resource getCapitalWithInfo;
 
-    public OpenAIServiceImpl(ChatClient chatClient) {
+    public OpenAIServiceImpl(ChatClient chatClient, ObjectMapper objectMapper) {
         this.chatClient = chatClient;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -49,8 +54,18 @@ public class OpenAIServiceImpl implements OpenAIService {
         PromptTemplate promptTemplate = new PromptTemplate(getCapitalPrompt);
         Prompt prompt = promptTemplate.create(Map.of("stateOrCountry", getCapitalRequest.stateOrCountry()));
         ChatResponse response = chatClient.call(prompt);
+        String answer = response.getResult().getOutput().getContent();
+        LOGGER.info("answer {}", answer);
 
-        return new Answer(response.getResult().getOutput().getContent());
+        String responseString;
+        try {
+            JsonNode jsonNode = objectMapper.readTree(response.getResult().getOutput().getContent());
+            responseString = jsonNode.get("answer").asText();
+
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        return new Answer(responseString);
     }
 
     @Override
