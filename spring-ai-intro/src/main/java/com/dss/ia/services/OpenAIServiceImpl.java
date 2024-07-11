@@ -57,7 +57,7 @@ public class OpenAIServiceImpl implements OpenAIService {
     public GetCapitalWithInfoResponse getCapitalWithInfo(GetCapitalRequest getCapitalRequest) {
         LOGGER.info("getCapitalWithInfo {}", getCapitalRequest);
         BeanOutputParser<GetCapitalWithInfoResponse> parser = new BeanOutputParser<>(GetCapitalWithInfoResponse.class);
-        return getResponse(getCapitalRequest, parser, getCapitalWithInfo);
+        return getResponse(getCapitalRequest, parser, getCapitalPrompt);
     }
 
     private <T extends Record> T getResponse(GetCapitalRequest getCapitalRequest, BeanOutputParser<T> parser, Resource resource) {
@@ -73,7 +73,7 @@ public class OpenAIServiceImpl implements OpenAIService {
 
         return parser.parse(answer);
     }
-    
+
     private String getSimpleAnswer(String question) {
         PromptTemplate promptTemplate = new PromptTemplate(question);
         Prompt prompt = promptTemplate.create();
