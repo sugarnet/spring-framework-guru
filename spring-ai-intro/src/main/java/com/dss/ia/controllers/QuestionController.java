@@ -3,6 +3,7 @@ package com.dss.ia.controllers;
 import com.dss.ia.model.Answer;
 import com.dss.ia.model.GetCapitalRequest;
 import com.dss.ia.model.GetCapitalResponse;
+import com.dss.ia.model.GetCapitalWithInfoResponse;
 import com.dss.ia.model.Question;
 import com.dss.ia.services.OpenAIService;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,7 +22,7 @@ public class QuestionController {
     }
 
     @PostMapping("/capitalWithInfo")
-    public Answer getCapitalWithInfo(@RequestBody GetCapitalRequest getCapitalRequest) {
+    public GetCapitalWithInfoResponse getCapitalWithInfo(@RequestBody GetCapitalRequest getCapitalRequest) {
         return this.openAIService.getCapitalWithInfo(getCapitalRequest);
     }
 
