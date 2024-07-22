@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.dss.ia</groupId>
-	<artifactId>spring-ai-intro</artifactId>
+	<artifactId>spring-ai-prompt-engineering</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>spring-ai-intro</name>
-	<description>spring-ai-intro</description>
+	<description>spring-ai-prompt-engineering</description>
 	<url/>
 	<licenses>
 		<license/>
