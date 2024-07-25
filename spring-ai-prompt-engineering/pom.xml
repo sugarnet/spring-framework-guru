@@ -11,7 +11,7 @@
 	<groupId>com.dss.ia</groupId>
 	<artifactId>spring-ai-prompt-engineering</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>spring-ai-intro</name>
+	<name>spring-ai-prompt-engineering</name>
 	<description>spring-ai-prompt-engineering</description>
 	<url/>
 	<licenses>
@@ -44,6 +44,12 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>com.vaadin.external.google</groupId>
+					<artifactId>android-json</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.httpcomponents.client5</groupId>
