@@ -8,7 +8,15 @@ import org.springframework.ai.chat.ChatClient;
 import org.springframework.ai.chat.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.document.Document;
+import org.springframework.ai.vectorstore.SearchRequest;
+import org.springframework.ai.vectorstore.SimpleVectorStore;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class OpenAIServiceImpl implements OpenAIService {
@@ -16,16 +24,27 @@ public class OpenAIServiceImpl implements OpenAIService {
     private static final Logger LOGGER = LoggerFactory.getLogger(OpenAIServiceImpl.class);
 
     private final ChatClient chatClient;
+    private final SimpleVectorStore vectorStore;
 
-    public OpenAIServiceImpl(ChatClient chatClient) {
+    @Value("classpath:/templates/rag-prompt-template.st")
+    private Resource ragPromptTemplate;
+
+    public OpenAIServiceImpl(ChatClient chatClient, SimpleVectorStore vectorStore) {
         this.chatClient = chatClient;
+        this.vectorStore = vectorStore;
     }
 
     @Override
     public Answer getAnswer(Question question) {
         LOGGER.debug("Get answer for {}", question);
-        PromptTemplate promptTemplate = new PromptTemplate(question.question());
-        Prompt prompt = promptTemplate.create();
+
+        List<Document> documents = vectorStore.similaritySearch(SearchRequest.query(question.question()).withTopK(5));
+        List<String> contentList = documents.stream().map(Document::getContent).toList();
+
+        PromptTemplate promptTemplate = new PromptTemplate(ragPromptTemplate);
+        Prompt prompt = promptTemplate.create(Map.of("input", question.question(), "documents", String.join("\n", contentList)));
+
+        contentList.forEach(System.out::println);
 
         ChatResponse chatResponse = chatClient.call(prompt);
         String response = chatResponse.getResult().getOutput().getContent();

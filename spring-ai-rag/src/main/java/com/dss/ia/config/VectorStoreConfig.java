@@ -18,6 +18,7 @@ import java.util.List;
 public class VectorStoreConfig {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(VectorStoreConfig.class);
+
     @Bean
     public SimpleVectorStore simpleVectorStore(EmbeddingClient embeddingClient, VectorStoreProperties vectorStoreProperties) {
 
@@ -34,10 +35,10 @@ public class VectorStoreConfig {
                 List<Document> splitDocs = textSplitter.apply(docs);
                 simpleVectorStore.add(splitDocs);
             });
+            simpleVectorStore.save(vectorStoreFile);
         } else {
             simpleVectorStore.load(vectorStoreFile);
         }
-        simpleVectorStore.save(vectorStoreFile);
         return simpleVectorStore;
 
     }
