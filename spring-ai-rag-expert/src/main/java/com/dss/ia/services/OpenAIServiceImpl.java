@@ -6,8 +6,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.ChatClient;
 import org.springframework.ai.chat.ChatResponse;
+import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.chat.prompt.SystemPromptTemplate;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -26,8 +28,11 @@ public class OpenAIServiceImpl implements OpenAIService {
     private final ChatClient chatClient;
     private final VectorStore vectorStore;
 
-    @Value("classpath:/templates/rag-prompt-template-meta.st")
+    @Value("classpath:/templates/rag-prompt-template.st")
     private Resource ragPromptTemplate;
+
+    @Value("classpath:/templates/system-message.st")
+    private Resource systemMessageTemplate;
 
     public OpenAIServiceImpl(ChatClient chatClient, VectorStore vectorStore) {
         this.chatClient = chatClient;
@@ -38,15 +43,18 @@ public class OpenAIServiceImpl implements OpenAIService {
     public Answer getAnswer(Question question) {
         LOGGER.debug("Get answer for {}", question);
 
+        PromptTemplate systemMessagePromptTemplate = new SystemPromptTemplate(systemMessageTemplate);
+        Message systemMessage = systemMessagePromptTemplate.createMessage();
+
         List<Document> documents = vectorStore.similaritySearch(SearchRequest.query(question.question()).withTopK(5));
         List<String> contentList = documents.stream().map(Document::getContent).toList();
 
         PromptTemplate promptTemplate = new PromptTemplate(ragPromptTemplate);
-        Prompt prompt = promptTemplate.create(Map.of("input", question.question(), "documents", String.join("\n", contentList)));
+        Message userMessage = promptTemplate.createMessage(Map.of("input", question.question(), "documents", String.join("\n", contentList)));
 
-        contentList.forEach(System.out::println);
+        contentList.forEach(LOGGER::debug);
 
-        ChatResponse chatResponse = chatClient.call(prompt);
+        ChatResponse chatResponse = chatClient.call(new Prompt(List.of(systemMessage, userMessage)));
         String response = chatResponse.getResult().getOutput().getContent();
         LOGGER.debug("Response is {}", response);
         return new Answer(response);
