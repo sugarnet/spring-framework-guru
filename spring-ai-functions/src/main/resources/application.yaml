@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: spring-ai-rag-expert
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      embedding:
+        options:
+          model: text-embedding-3-small
+      chat:
+          options:
+            model: gpt-4
