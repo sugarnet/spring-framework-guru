@@ -1,6 +1,5 @@
 package com.dss.ia.functions;
 
-import com.dss.ia.model.CitiesResponse;
 import com.dss.ia.model.CityResponse;
 import com.dss.ia.model.WeatherRequest;
 import com.dss.ia.model.WeatherResponse;
@@ -8,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.client.RestClient;
 
-import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 
 public class WeatherServiceFunction implements Function<WeatherRequest, WeatherResponse> {
@@ -34,7 +33,7 @@ public class WeatherServiceFunction implements Function<WeatherRequest, WeatherR
                 }).build();
 
 
-        CitiesResponse body = restClient.get().uri(uriBuilder -> {
+        CityResponse[] cityResponse = restClient.get().uri(uriBuilder -> {
             LOGGER.info("Building URI for city request: {}", weatherRequest);
 
             uriBuilder.queryParam("name", weatherRequest.location());
@@ -46,7 +45,9 @@ public class WeatherServiceFunction implements Function<WeatherRequest, WeatherR
                 uriBuilder.queryParam("country", weatherRequest.country());
             }
             return uriBuilder.build();
-        }).retrieve().body(CitiesResponse.class);
+        }).retrieve().body(CityResponse[].class);
+
+        LOGGER.info("City response: {}", cityResponse);
 
         restClient = RestClient.builder()
                 .baseUrl(WEATHER_URL)
@@ -56,17 +57,21 @@ public class WeatherServiceFunction implements Function<WeatherRequest, WeatherR
                     httpHeaders.set("Content-Type", "application/json");
                 }).build();
 
-        if (Objects.nonNull(body) && Objects.nonNull(body.cities()) && body.cities().length > 0) {
-            return restClient.get().uri(uriBuilder -> {
-                LOGGER.info("Building URI for weather request: {}", body);
+        WeatherResponse response = null;
+        if (Optional.ofNullable(cityResponse).isPresent()) {
+            response = restClient.get().uri(uriBuilder -> {
+                LOGGER.info("Building URI for weather request. Latitude: {}, Longitude {}", cityResponse[0].latitude(), cityResponse[0].longitude());
 
-                uriBuilder.queryParam("lat", body.cities()[0].latitude());
-                uriBuilder.queryParam("lon", body.cities()[0].longitude());
+                uriBuilder.queryParam("lat", cityResponse[0].latitude());
+                uriBuilder.queryParam("lon", cityResponse[0].longitude());
 
                 return uriBuilder.build();
             }).retrieve().body(WeatherResponse.class);
+
+            LOGGER.info("Weather response: {}", response);
+
         }
 
-        return null;
+        return response;
     }
 }
