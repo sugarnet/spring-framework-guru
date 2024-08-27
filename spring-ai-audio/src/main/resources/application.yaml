@@ -1,6 +1,6 @@
 spring:
   application:
-    name: spring-ai-image-vision
+    name: spring-ai-audio
   ai:
     openai:
       api-key: ${OPENAI_API_KEY}
